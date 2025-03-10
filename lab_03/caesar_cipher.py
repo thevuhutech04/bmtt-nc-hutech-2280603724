@@ -34,7 +34,7 @@ class MyApp(QMainWindow):
     def call_api_decrypt(self):
         url = "http://127.0.0.1:5000/api/caesar/decrypt"
         payload = {
-            "cipher_text": self.ui.txt_cipher_text.toPlainText(),
+            "ciphertext": self.ui.txt_cipher_text.toPlainText(),
             "key": self.ui.txt_key.toPlainText()
         }    
         try:
