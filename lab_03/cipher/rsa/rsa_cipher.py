@@ -27,8 +27,8 @@ class RSACipher:
     def decrypt(self, ciphertext, key):
         try:
             return rsa.decrypt(ciphertext, key).decode('ascii')
-        except:
-            return False
+        except Exception as e:
+            return "Decryption failed: " + str(e)
 
     def sign(self, message, key):
         return rsa.sign(message.encode('ascii'), key, 'SHA-1')
