@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify
 from cipher.rsa import RSACipher
+from cipher.ecc import ECCCipher
+import os
 
 app = Flask(__name__)
 
@@ -61,6 +63,52 @@ def rsa_verify_signature():
     signature = bytes.fromhex(signature_hex)
     is_verified = rsa_cipher.verify(message, signature, public_key)
     return jsonify({"is_verified": is_verified})
+
+#ECC CIPHER ALGORITHM
+ecc_cipher = ECCCipher()
+
+@app.route('/api/ecc/generate_keys', methods=['GET'])  
+def ecc_generate_keys():   
+    try:
+        ecc_cipher.generate_keys()
+        return jsonify({'message': 'Keys generated successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ecc/sign', methods=['POST'])  
+def ecc_sign_message():
+    try:
+        data = request.json 
+        message = data['message']
+        
+        # Check if keys exist, if not generate them
+        if not os.path.exists(os.path.join(ecc_cipher.key_dir, "private_key.pem")):
+            ecc_cipher.generate_keys()
+            
+        private_key, _ = ecc_cipher.load_keys()
+        signature = ecc_cipher.sign(message, private_key)
+        signature_hex = signature.hex()
+        return jsonify({'signature': signature_hex})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ecc/verify', methods=['POST'])  
+def ecc_verify_signature():  
+    try:
+        data = request.get_json()  
+        message = data['message']  
+        signature_hex = data['signature']
+        
+        # Check if keys exist, if not generate them
+        if not os.path.exists(os.path.join(ecc_cipher.key_dir, "public_key.pem")):
+            ecc_cipher.generate_keys()
+            
+        _, public_key = ecc_cipher.load_keys()
+        signature = bytes.fromhex(signature_hex)
+        is_verified = ecc_cipher.verify(message, signature, public_key)  
+        return jsonify({'is_verified': is_verified})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 #main function
 if __name__ == '__main__':
